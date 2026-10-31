@@ -1,0 +1,59 @@
+# Compiles every tracked sketch on each push / pull request, so a sketch that
+# doesn't build is caught on GitHub before it reaches a board.
+# Uses the settings template in secrets-template/ — no real WiFi details needed.
+name: Build firmware
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:        # "Run workflow" button on the Actions tab
+
+jobs:
+  build:
+    name: ${{ matrix.board }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Pitcher (IMU) + I2C scanner: ESP32-C3 Super Mini
+          # = Arduino IDE: ESP32C3 Dev Module, USB CDC On Boot Enabled, Flash Mode DIO
+          - board: ESP32-C3 Super Mini
+            fqbn: esp32:esp32:esp32c3:CDCOnBoot=cdc,FlashMode=dio
+            sketches: |
+              - okuma_imu_osc
+              - okuma_i2c_scan
+          # Load cells: ESP32 Dev Module (DevKitC, 38-pin)
+          - board: ESP32 Dev Module
+            fqbn: esp32:esp32:esp32
+            sketches: |
+              - okuma_loadcells_osc
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that no real WiFi settings were committed
+        run: |
+          T=secrets-template/SeventhBowlSecrets/SeventhBowlSecrets.h
+          if ! grep -q '"your-password"' "$T"; then
+            echo "::error file=$T::The template no longer has the placeholder password. Put the placeholders back and change that WiFi password."
+            exit 1
+          fi
+          if git ls-files | grep -E '(^|/)secrets\.h$'; then
+            echo "::error::A secrets.h is in the repository. Remove it with 'git rm --cached <path>' and change that WiFi password."
+            exit 1
+          fi
+
+      - name: Compile
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: ${{ matrix.fqbn }}
+          platforms: |
+            - name: esp32:esp32
+              source-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+              version: 3.3.11
+          libraries: |
+            - name: OSC
+            - source-path: ./secrets-template/SeventhBowlSecrets
+          sketch-paths: ${{ matrix.sketches }}
+          enable-warnings-report: true

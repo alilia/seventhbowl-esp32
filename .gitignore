@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+#  Seventh Bowl — whitelist: everything in this folder is ignored by default,
+#  only the entries with "!" below are tracked. To start tracking another
+#  module, add a line like   !/okuma_newmodule/   (and make it use the
+#  shared SeventhBowlSecrets library first, so no WiFi password ends up in git).
+# ---------------------------------------------------------------------------
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/.github/
+!/okuma_imu_osc/
+!/okuma_i2c_scan/
+!/okuma_loadcells_osc/
+!/secrets-template/
+
+# The real WiFi settings live outside the repo (Arduino libraries folder).
+# Old per-sketch settings files, just in case:
+secrets.h
+
+# Build output / editor clutter
+build/
+*.bin
+*.elf
+*.map
+.vscode/
+.DS_Store
+Thumbs.db
