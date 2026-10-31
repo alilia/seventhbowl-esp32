@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: ${{ matrix.board }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04     # pinned: on ubuntu-latest (26.04) compile-sketches can't install its Python 3.12.4
     strategy:
       fail-fast: false
       matrix:
